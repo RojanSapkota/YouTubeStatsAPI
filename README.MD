@@ -14,7 +14,7 @@ Effortlessly access YouTube channel details, recent videos, video statistics, an
 <h2 align="left">👤 Repo Visitors:</h2>
 <p align="left">
 <a href="https://rojansapkota.com.np" target="_blank">
-<img src="https://profile-counter.glitch.me/RojanSapkota_YouTube-Channel-Video-API/count.svg" alt="Visitor Counter"/>
+<img src="https://profile-counter.glitch.me/RojanSapkota_YouTubeStatsAPI/count.svg" alt="Visitor Counter"/>
 </a>
 </p>
 

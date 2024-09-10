@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # YouTube Channel & Video API
 
 Effortlessly access YouTube channel details, recent videos, video statistics, and transcripts with this Flask-based API. Designed for simplicity and efficiency, this tool helps you retrieve comprehensive YouTube data quickly.
@@ -76,4 +75,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 
 For any questions or feedback, please contact [Rojan](mailto:github@rojansapkota.com.np).
->>>>>>> 1e9149f8eeb75a1488fb8f29695f6ac4ca72d52e

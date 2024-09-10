@@ -1,53 +1,137 @@
-import os
-from datetime import datetime, timedelta
-import time
+from flask import Flask, request, jsonify
+import requests
+from flask_caching import Cache
 
-def remove_old_commits(last_good_commit_hash: str):
-    """Remove commits after a specific commit hash."""
-    os.system(f'git reset --hard {last_good_commit_hash}')
-    os.system('git push origin main --force')
+app = Flask(__name__)
 
-def make_commits_for_today(total_commits: int, commits_per_push: int = 1000, cooldown_seconds: int = 5):
-    """Generate multiple commits for today with batching, file reset, and cooldown."""
-    current_date = datetime.now()
-    commit_batch = 0
+cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
+cache.init_app(app)
 
-    for i in range(total_commits):
-        commit_time = current_date + timedelta(minutes=i*10)  # 10-minute intervals
-        commit_date = commit_time.strftime('%Y-%m-%d %H:%M:%S')
+@app.route('/channel', methods=['GET'])
+@cache.cached(query_string=True)
+def get_channel_info():
+    try:
+        channel_id = request.args.get('id')
 
-        # Overwrite the file with a small update to avoid flooding
-        with open('data.txt', 'w') as file:
-            file.write(f'Temporary commit {i+1} made on {commit_date}\n')
+        if not channel_id:
+            return jsonify({'error': 'No channel ID provided'}), 400
 
-        # Stage the file
-        os.system('git add data.txt')
+        url = f"https://yt.lemnoslife.com/noKey/channels?part=snippet,statistics&id={channel_id}"
 
-        # Commit with the specific commit date
-        os.system(f'git commit --date="{commit_date}" -m "Commit {i+1} for {commit_time.strftime("%Y-%m-%d %H:%M:%S")}"')
+        response = requests.get(url)
 
-        # Push every `commits_per_push` commits to avoid overwhelming GitHub
-        if (i + 1) % commits_per_push == 0:
-            commit_batch += 1
-            print(f"Pushing batch {commit_batch} of {commits_per_push} commits.")
-            os.system('git push')
-            
-            # Introduce cooldown to prevent hitting GitHub's rate limits
-            print(f"Cooldown for {cooldown_seconds} seconds.")
-            time.sleep(cooldown_seconds)
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch data from YouTube API'}), response.status_code
 
-    # Final push for any remaining commits after the last batch
-    if total_commits % commits_per_push != 0:
-        print("Pushing remaining commits.")
-        os.system('git push')
+        data = response.json()
 
-# Example usage
-if __name__ == "__main__":
-    # Last good commit hash before the new commits
-    last_good_commit_hash = '1234abcd'  # Example commit hash
+        if 'items' not in data or len(data['items']) == 0:
+            return jsonify({'error': 'No channel data found'}), 404
 
-    # Remove old commits if needed
-    remove_old_commits(last_good_commit_hash)
+        channel_data = data['items'][0]
 
-    # Generate a large number of commits for today (e.g., 2000 commits)
-    make_commits_for_today(total_commits=3000, commits_per_push=1000, cooldown_seconds=10)
+        snippet = channel_data.get('snippet', {})
+        statistics = channel_data.get('statistics', {})
+
+        result = {
+            'title': snippet.get('localized', {}).get('title'),
+            'description': snippet.get('localized', {}).get('description'),
+            'subscribers': statistics.get('subscriberCount')
+        }
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({'error': f'An unexpected error occurred: {str(e)}'}), 500
+    
+@app.route('/recentvid', methods=['GET'])
+@cache.cached(query_string=True)
+def get_recent_video():
+    try:
+        channel_id = request.args.get('id')
+
+        if not channel_id:
+            return jsonify({'error': 'No channel ID provided'}), 400
+
+        url = f"https://yt.lemnoslife.com/noKey/search?part=snippet&channelId={channel_id}&maxResults=1&order=date&type=video"
+
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch data from YouTube API'}), response.status_code
+
+        data = response.json()
+
+        if 'items' not in data or len(data['items']) == 0:
+            return jsonify({'error': 'No recent video found'}), 404
+
+        video_id = data['items'][0]['id']['videoId']
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+
+        return jsonify({'videoUrl': video_url})
+
+    except Exception as e:
+        return jsonify({'error': f'An unexpected error occurred: {str(e)}'}), 500
+
+@app.route('/stats', methods=['GET'])
+@cache.cached(query_string=True)
+def get_video_stats():
+    try:
+        video_id = request.args.get('id')
+
+        if not video_id:
+            return jsonify({'error': 'No video ID provided'}), 400
+
+        url = f"https://yt.lemnoslife.com/noKey/videos?id={video_id}&part=snippet,contentDetails,statistics,status"
+
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch data from YouTube API'}), response.status_code
+
+        data = response.json()
+
+        if 'items' not in data or len(data['items']) == 0:
+            return jsonify({'error': 'No video data found'}), 404
+
+        video_item = data['items'][0]
+        title = video_item['snippet']['title']
+        view_count = video_item['statistics']['viewCount']
+
+        return jsonify({'title': title, 'viewCount': view_count})
+
+    except Exception as e:
+        return jsonify({'error': f'An unexpected error occurred: {str(e)}'}), 500
+    
+@app.route('/transcript', methods=['GET'])
+@cache.cached(query_string=True)
+def generate_transcript():
+    vid_id = request.args.get('id')
+    if not vid_id:
+        return jsonify({'error': 'No video ID provided'}), 400
+
+    json_data = {
+        'video_id': vid_id,
+        'format': True,
+    }
+
+    try:
+        response = requests.post('https://api.kome.ai/api/tools/youtube-transcripts', json=json_data)
+
+        if response.status_code == 200:
+            transcript_data = response.json()
+            transcript_text = transcript_data.get('transcript', 'No Transcript')
+            return jsonify({'transcript': transcript_text})
+        else:
+            return jsonify({'transcript': 'No Transcript'})
+
+    except requests.RequestException as e:
+        return jsonify({'transcript': 'No Transcript'})
+    except Exception as e:
+        return jsonify({'error': f'An unexpected error occurred: {str(e)}'}), 500
+    
+def main():
+    app.run(debug=True, port=5000)
+
+if __name__ == '__main__':
+    main()

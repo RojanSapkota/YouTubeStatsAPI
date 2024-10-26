@@ -1,5 +1,3 @@
-Here’s the updated README with improved clarity and corrections:
-
 ```markdown
 # YouTube Channel & Video API
 

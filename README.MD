@@ -1,6 +1,7 @@
-### YouTube Legal Notice
+# YouTube Channel & Video API (Deprecated)
+
 The `https://yt.lemnoslife.com` service has been discontinued due to violations of the YouTube Terms of Service, as per a notice received on **October 4, 2024** from the YouTube Legal Team. The endpoints relying on this service are now deprecated and may no longer function as intended.
----
+
 
 ```markdown
 # YouTube Channel & Video API

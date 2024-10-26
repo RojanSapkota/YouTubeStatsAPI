@@ -1,6 +1,6 @@
 # YouTube Channel & Video API (Deprecated)
 
-The `https://yt.lemnoslife.com` service has been discontinued due to violations of the YouTube Terms of Service, as per a notice received on **October 4, 2024** from the YouTube Legal Team. The endpoints relying on this service are now deprecated and may no longer function as intended.
+The `https://yt.lemnoslife.com` service has been discontinued due to violations of the YouTube Terms of Service, as per a notice received on **October 4, 2024** from the YouTube Legal Team. The endpoints relying on this service are now deprecated and may no longer function as intended.See the relevant discussion [here](https://github.com/Benjamin_Loison/Thunderbird/issues/43#issuecomment-2369800)
 
 
 ```markdown

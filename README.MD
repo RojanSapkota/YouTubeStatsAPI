@@ -1,7 +1,7 @@
-# YouTube Channel & Video API (Deprecated)
-
-**Important Notice:** This API relies on the unofficial YouTube data source `https://yt.lemnoslife.com`. As of **October 4, 2024**, this API has been shut down following a legal notice from the YouTube Legal Team. This was due to violations of the YouTube Terms of Service and API Services Terms. As such, the endpoints in this API may no longer function.
+### YouTube Legal Notice
+The `https://yt.lemnoslife.com` service has been discontinued due to violations of the YouTube Terms of Service, as per a notice received on **October 4, 2024** from the YouTube Legal Team. The endpoints relying on this service are now deprecated and may no longer function as intended.
 ---
+
 ```markdown
 # YouTube Channel & Video API
 
